@@ -345,6 +345,9 @@ def render_main():
     with st.spinner("📦 กำลังโหลดข้อมูล..."):
         idx, items = load_vectors_cached()
 
+    if idx is None:
+        st.warning("⚠️ ฐานข้อมูลว่างเปล่า กรุณาเพิ่มข้อมูลอะไหล่ใน Supabase/SQLite ก่อนใช้งานครับ")
+    
     def encode_text(text):
         tokens = clip.tokenize([text]).to(device)
         with torch.no_grad(): vec = model.encode_text(tokens)
@@ -358,6 +361,7 @@ def render_main():
         return vec.cpu().numpy().astype("float32")
 
     def search_parts(q_vec, lat, lng, q_text=None):
+        if idx is None: return []
         D, I = idx.search(q_vec, min(200, len(items)))
         results, seen = [], set()
         for score, i in zip(D[0], I[0]):
