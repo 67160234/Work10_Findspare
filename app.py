@@ -118,9 +118,30 @@ with st.sidebar:
             st.session_state.username = None
             st.session_state.user_id = None
             st.rerun()
-    st.divider()
     st.title("Settings")
     theme_mode = st.toggle("🌙 Night Mode", value=True)
+    
+    # --- NEW: Developer Tools (For Debugging) ---
+    st.divider()
+    with st.expander("🛠️ Developer Tools (Debug DB)"):
+        st.write("ตรวจสอบข้อมูลในฐานข้อมูล (เฉพาะแอดมิน/คนพัฒนา)")
+        db_tables = ["users", "favorites", "shops", "shop_parts"]
+        selected_table = st.selectbox("เลือกตารางเพื่อดูข้อมูล", db_tables)
+        
+        if st.button("👁️ ดึงข้อมูลตาราง", use_container_width=True):
+            try:
+                conn = get_db_connection()
+                # Create table if missing during debug check
+                if selected_table == "users":
+                    conn.execute("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, email TEXT, password TEXT)")
+                elif selected_table == "favorites":
+                    conn.execute("CREATE TABLE IF NOT EXISTS favorites (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, part_id INTEGER, UNIQUE(user_id, part_id))")
+                
+                df = st.dataframe(conn.execute(f"SELECT * FROM {selected_table} LIMIT 100").fetchall())
+                conn.close()
+            except Exception as e:
+                st.error(f"⚠️ ไม่สามารถเรียกดูข้อมูลได้: {e}")
+    
     st.divider()
     st.markdown("FindSpares AI matches your requirements with local shop data using CLIP models.")
 
