@@ -260,9 +260,9 @@ else:
 """
 st.markdown(theme_css, unsafe_allow_html=True)
 
-# ---------------------------
+# --------------------------
 # SCREENS
-# ---------------------------
+# --------------------------
 def render_auth():
     st.markdown("<h1 style='text-align: center;'>🔐 ยินดีต้อนรับสู่ FindSpares AI</h1>", unsafe_allow_html=True)
     col1, col2, col3 = st.columns([1, 2, 1])
