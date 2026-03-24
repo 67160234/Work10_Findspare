@@ -367,19 +367,33 @@ def render_main():
     
     with tab_search:
         st.info("📍 ค้นหาด้วยชื่อ หรือ อัปโหลด/ถ่ายรูป")
-        t1, t2, t3 = st.tabs(["🔍 ชื่อ", "📁 ไฟล์", "📸 กล้อง"])
-        with t1: q = st.text_input("ระบุคำค้นหา")
-        with t2: up = st.file_uploader("เลือกไฟล์", type=["jpg","png","jpeg"])
-        with t3: ci = st.camera_input("ถ่ายรูป")
+        # Unified Google-style Search Bar
+        scol, ccol = st.columns([7, 1])
+        with scol:
+            q = st.text_input("🔍 พิมพ์ชื่ออะไหล่ หรือ อัปโหลดรูป", key="search_q", label_visibility="collapsed")
+        with ccol:
+            if st.button("📸", key="btn_cam_toggle", help="เปิดกล้องเพื่อถ่ายรูป"):
+                st.session_state.show_camera = not st.session_state.get("show_camera", False)
+
+        # File uploader (hidden but functional)
+        up = st.file_uploader("📁 อัปโหลดรูปภาพ", type=["jpg","png","jpeg"], label_visibility="collapsed")
         
-        if st.button("🚀 เริ่มการค้นหา", use_container_width=True):
+        # Camera Input (Toggleable)
+        ci = None
+        if st.session_state.get("show_camera"):
+            ci = st.camera_input("📸 ถ่ายรูปอะไหล่ที่ต้องการค้นหา")
+
+        # Logic: Auto-trigger search when any input is provided
+        if q or up or ci:
             with st.spinner("🔎 กำลังประมวลผล..."):
                 t_img = ci if ci else up
                 if t_img: res = search_parts(encode_image(Image.open(t_img)), 13.2839, 100.9289)
                 elif q: res = search_parts(encode_text(q), 13.2839, 100.9289, q)
-                else: st.warning("⚠️ ระบุข้อมูลก่อน"); st.stop()
-                st.session_state.results = sorted(res, key=lambda x: (-x["score"], x["distance"]))
-                st.session_state.page = 1
+                
+                if 'res' in locals():
+                    st.session_state.results = sorted(res, key=lambda x: (-x["score"], x["distance"]))
+                    st.session_state.page = 1
+                    if ci: st.session_state.show_camera = False # Hide camera after success
 
         if st.session_state.get("results"):
             # Apply Sidebar Filters
