@@ -143,7 +143,16 @@ with st.sidebar:
                 st.error(f"⚠️ ไม่สามารถเรียกดูข้อมูลได้: {e}")
     
     st.divider()
+    st.header("🎯 ตัวกรองการค้นหา")
+    max_dist = st.slider("📏 ระยะทางสูงสุด (กม.)", 0, 100, 50)
+    min_match = st.slider("🤖 ความแม่นยำ AI (%)", 0, 100, 40)
+    
+    st.divider()
     st.markdown("FindSpares AI matches your requirements with local shop data using CLIP models.")
+    
+    # Store filters in session state for logic use
+    st.session_state.max_dist = max_dist
+    st.session_state.min_match = min_match / 100
 
 theme_css = f"""
 <style>
@@ -324,7 +333,16 @@ def render_main():
                 st.session_state.page = 1
 
         if st.session_state.get("results"):
-            render_grid(st.session_state.results)
+            # Apply Sidebar Filters
+            max_d = st.session_state.get("max_dist", 50)
+            min_m = st.session_state.get("min_match", 0.4)
+            
+            filtered_res = [r for r in st.session_state.results if r["distance"] <= max_d and r["score"] >= min_m]
+            
+            if filtered_res:
+                render_grid(filtered_res)
+            else:
+                st.warning(f"🔎 ไม่พบอะไหล่ภายในระยะ {max_d} กม. หรือ Match > {int(min_m*100)}% ลองปรับตัวกรองที่แถบด้านข้างดูครับ")
 
     with tab_fav:
         fav_ids = get_user_favorites(st.session_state.user_id)
