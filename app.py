@@ -39,25 +39,35 @@ def verify_user(username, password):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
+        # Fail-safe: Ensure users table exists
+        cursor.execute("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, email TEXT, password TEXT)")
+        
         cursor.execute("SELECT id, password FROM users WHERE username = ?", (username,))
         row = cursor.fetchone()
         conn.close()
         if row and row["password"] == hash_pw(password):
             return row["id"]
-    except:
-        pass
+    except Exception as e:
+        st.error(f"❌ ระบบยืนยันตัวตนผิดพลาด: {e}")
     return None
 
 def add_user(username, email, password):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
+        # Fail-safe: Ensure users table exists
+        cursor.execute("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, email TEXT, password TEXT)")
+        
         cursor.execute("INSERT INTO users (username, email, password) VALUES (?, ?, ?)", 
                        (username, email, hash_pw(password)))
         conn.commit()
         conn.close()
         return True
-    except:
+    except Exception as e:
+        if "UNIQUE constraint failed" in str(e):
+            st.warning("⚠️ มีชื่อผู้ใช้นี้อยู่ในระบบแล้ว")
+        else:
+            st.error(f"❌ ไม่สามารถบันทึกข้อมูลได้: {e}")
         return False
 
 # ---------------------------
