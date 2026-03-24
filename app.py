@@ -15,6 +15,18 @@ from supabase import create_client, Client
 st.set_page_config(page_title="FindSpares AI (Cloud)", layout="wide", initial_sidebar_state="collapsed")
 
 # ---------------------------
+# SESSION STATE INIT (MUST BE AT TOP)
+# ---------------------------
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+if "username" not in st.session_state:
+    st.session_state.username = None
+if "user_id" not in st.session_state:
+    st.session_state.user_id = None
+if "page" not in st.session_state:
+    st.session_state.page = 1
+
+# ---------------------------
 # DATABASE CONFIG (SUPABASE FALLBACK TO SQLITE)
 # ---------------------------
 SUPABASE_URL = st.secrets.get("SUPABASE_URL")
@@ -260,15 +272,7 @@ def render_auth():
                     elif add_user(u, e, p): st.success("✅ สำเร็จ! กรุณาเข้าสู่ระบบ")
                     else: st.error("❌ Username ถูกใช้ไปแล้ว")
 
-# ---------------------------
-# SESSION STATE INIT (INTERNAL)
-# ---------------------------
-if "authenticated" not in st.session_state:
-    st.session_state.authenticated = False
-if "username" not in st.session_state:
-    st.session_state.username = None
-if "user_id" not in st.session_state:
-    st.session_state.user_id = None
+# (Session state moved to top)
 
 def render_main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
