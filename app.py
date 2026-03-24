@@ -9,7 +9,86 @@ import faiss
 import math
 import os
 
-st.set_page_config(page_title="FindSpares AI (Standalone)", layout="wide")
+st.set_page_config(page_title="FindSpares AI (Standalone)", layout="wide", initial_sidebar_state="collapsed")
+
+# ---------------------------
+# UI CUSTOMIZATION (Theme & Mobile)
+# ---------------------------
+
+# Theme Toggle in Sidebar
+with st.sidebar:
+    st.title("Settings")
+    theme_mode = st.toggle("🌙 Night Mode", value=True)
+    st.divider()
+    st.markdown("""
+    ### About
+    FindSpares AI matches your requirements with local shop data using CLIP models.
+    """)
+
+# Inject Custom CSS for Theme and Responsiveness
+theme_css = """
+<style>
+    /* Mobile Responsive Optimizations */
+    @media (max-width: 640px) {
+        .main .block-container {
+            padding: 1rem !important;
+        }
+        h1 {
+            font-size: 1.8rem !important;
+        }
+    }
+
+    /* Card Styling */
+    .stCard {
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 1px solid #ddd;
+        transition: transform 0.2s;
+    }
+    .stCard:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+</style>
+"""
+
+# Dynamic Theme Override
+if theme_mode:
+    # 🌙 Dark Mode Override
+    theme_css += """
+    <style>
+        .stApp {
+            background-color: #0E1117;
+            color: #FAFAFA;
+        }
+        [data-testid="stHeader"] {
+            background-color: rgba(14, 17, 23, 0.8);
+        }
+        .stMarkdown, p, span, label {
+            color: #FAFAFA !important;
+        }
+        .stTextInput input, .stFileUploader section {
+            background-color: #262730 !important;
+            color: white !important;
+        }
+    </style>
+    """
+else:
+    # ☀️ Light Mode Override
+    theme_css += """
+    <style>
+        .stApp {
+            background-color: #FFFFFF;
+            color: #31333F;
+        }
+        .stMarkdown, p, span, label {
+            color: #31333F !important;
+        }
+    </style>
+    """
+
+st.markdown(theme_css, unsafe_allow_html=True)
 
 # ---------------------------
 # LOAD MODEL (Cached)
@@ -228,21 +307,31 @@ if st.session_state.results:
     end = start + per_page
     page_results = results[start:end]
 
+    # Result Grid (Adaptive)
+    # On mobile, Streamlit automatically stacks columns. 
+    # We use a loop that works well with the automatic stacking.
+    
+    # Use 1 column for very small, 2 for medium, 3 for large? 
+    # Streamlit standard columns are best for this.
     cols = st.columns(3)
     for i, r in enumerate(page_results):
         with cols[i % 3]:
-            img_path = f"shop_parts/{r['image']}"
-            if os.path.exists(img_path):
-                st.image(img_path, use_container_width=True)
-            else:
-                st.image("https://via.placeholder.com/300x200?text=No+Image", use_container_width=True)
-            
-            st.markdown(f"### {r['part_name']}")
-            st.write(f"🏪 **ร้าน:** {r['shop_name']}")
-            st.write(f"📍 **ระยะห่าง:** {r['distance']:.2f} กม.")
-            st.write(f"⭐ **AI Match:** {r['score']:.2f}")
-            st.markdown(f"[🗺️ ดูแผนที่ร้าน]({r['map']})")
-            st.divider()
+            # Custom Container for Card
+            with st.container(border=True):
+                img_path = f"shop_parts/{r['image']}"
+                if os.path.exists(img_path):
+                    st.image(img_path, use_container_width=True)
+                else:
+                    st.image("https://via.placeholder.com/300x200?text=No+Image", use_container_width=True)
+                
+                st.subheader(f"{r['part_name']}")
+                st.write(f"🏪 **ร้าน:** {r['shop_name']}")
+                st.write(f"📍 **ระยะห่าง:** {r['distance']:.2f} กม.")
+                
+                # Match Progress Bar or Metric
+                st.progress(r["score"], text=f"AI Match: {int(r['score']*100)}%")
+                
+                st.link_button("🗺️ ดูแผนที่ร้าน", r['map'], use_container_width=True)
 
     if total_pages > 1:
         p_col1, p_col2, p_col3 = st.columns([1, 2, 1])
