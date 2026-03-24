@@ -10,24 +10,26 @@ import math
 import os
 import hashlib
 
-st.set_page_config(page_title="FindSpares AI (Standalone)", layout="wide", initial_sidebar_state="collapsed")
+from supabase import create_client, Client
+
+st.set_page_config(page_title="FindSpares AI (Cloud)", layout="wide", initial_sidebar_state="collapsed")
 
 # ---------------------------
-# SESSION STATE INIT
+# DATABASE CONFIG (SUPABASE FALLBACK TO SQLITE)
 # ---------------------------
-if "authenticated" not in st.session_state:
-    st.session_state.authenticated = False
-if "username" not in st.session_state:
-    st.session_state.username = None
-if "user_id" not in st.session_state:
-    st.session_state.user_id = None
+SUPABASE_URL = st.secrets.get("SUPABASE_URL")
+SUPABASE_KEY = st.secrets.get("SUPABASE_KEY")
+USE_SUPABASE = bool(SUPABASE_URL and SUPABASE_KEY)
 
-# ---------------------------
-# AUTH & DB LOGIC
-# ---------------------------
+if USE_SUPABASE:
+    supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+else:
+    st.sidebar.warning("💾 Using local SQLite (Session only). Use Supabase for permanent storage.")
+
 SALT = "FindSparesAI_2024"
 
 def get_db_connection():
+    # Only for SQLite fallback
     conn = sqlite3.connect("database.db")
     conn.row_factory = sqlite3.Row
     return conn
@@ -37,34 +39,37 @@ def hash_pw(password):
 
 def verify_user(username, password):
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        # Fail-safe: Ensure users table exists
-        cursor.execute("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, email TEXT, password TEXT)")
-        
-        cursor.execute("SELECT id, password FROM users WHERE username = ?", (username,))
-        row = cursor.fetchone()
-        conn.close()
-        if row and row["password"] == hash_pw(password):
-            return row["id"]
+        pw_hash = hash_pw(password)
+        if USE_SUPABASE:
+            res = supabase.table("users").select("id").eq("username", username).eq("password", pw_hash).execute()
+            if res.data: return res.data[0]["id"]
+        else:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, email TEXT, password TEXT)")
+            cursor.execute("SELECT id FROM users WHERE username = ? AND password = ?", (username, pw_hash))
+            row = cursor.fetchone()
+            conn.close()
+            if row: return row["id"]
     except Exception as e:
         st.error(f"❌ ระบบยืนยันตัวตนผิดพลาด: {e}")
     return None
 
 def add_user(username, email, password):
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        # Fail-safe: Ensure users table exists
-        cursor.execute("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, email TEXT, password TEXT)")
-        
-        cursor.execute("INSERT INTO users (username, email, password) VALUES (?, ?, ?)", 
-                       (username, email, hash_pw(password)))
-        conn.commit()
-        conn.close()
-        return True
+        pw_hash = hash_pw(password)
+        if USE_SUPABASE:
+            res = supabase.table("users").insert({"username": username, "email": email, "password": pw_hash}).execute()
+            return True
+        else:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, email TEXT, password TEXT)")
+            cursor.execute("INSERT INTO users (username, email, password) VALUES (?, ?, ?)", (username, email, pw_hash))
+            conn.commit(); conn.close()
+            return True
     except Exception as e:
-        if "UNIQUE constraint failed" in str(e):
+        if "UNIQUE" in str(e) or "duplicate" in str(e).lower():
             st.warning("⚠️ มีชื่อผู้ใช้นี้อยู่ในระบบแล้ว")
         else:
             st.error(f"❌ ไม่สามารถบันทึกข้อมูลได้: {e}")
@@ -75,20 +80,27 @@ def add_user(username, email, password):
 # ---------------------------
 def toggle_favorite(user_id, part_id):
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        # Ensure table exists (fail-safe)
-        cursor.execute("CREATE TABLE IF NOT EXISTS favorites (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, part_id INTEGER, UNIQUE(user_id, part_id))")
-        
-        cursor.execute("SELECT id FROM favorites WHERE user_id = ? AND part_id = ?", (user_id, part_id))
-        if cursor.fetchone():
-            cursor.execute("DELETE FROM favorites WHERE user_id = ? AND part_id = ?", (user_id, part_id))
-            st.toast("🗑️ ลบจากรายการโปรดแล้ว")
+        if USE_SUPABASE:
+            # Check exist
+            check = supabase.table("favorites").select("id").eq("user_id", user_id).eq("part_id", part_id).execute()
+            if check.data:
+                supabase.table("favorites").delete().eq("user_id", user_id).eq("part_id", part_id).execute()
+                st.toast("🗑️ ลบจากรายการโปรดแล้ว")
+            else:
+                supabase.table("favorites").insert({"user_id": user_id, "part_id": part_id}).execute()
+                st.toast("⭐ บันทึกเป็นรายการโปรดแล้ว")
         else:
-            cursor.execute("INSERT INTO favorites (user_id, part_id) VALUES (?, ?)", (user_id, part_id))
-            st.toast("⭐ บันทึกเป็นรายการโปรดแล้ว")
-        conn.commit()
-        conn.close()
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("CREATE TABLE IF NOT EXISTS favorites (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, part_id INTEGER, UNIQUE(user_id, part_id))")
+            cursor.execute("SELECT id FROM favorites WHERE user_id = ? AND part_id = ?", (user_id, part_id))
+            if cursor.fetchone():
+                cursor.execute("DELETE FROM favorites WHERE user_id = ? AND part_id = ?", (user_id, part_id))
+                st.toast("🗑️ ลบจากรายการโปรดแล้ว")
+            else:
+                cursor.execute("INSERT INTO favorites (user_id, part_id) VALUES (?, ?)", (user_id, part_id))
+                st.toast("⭐ บันทึกเป็นรายการโปรดแล้ว")
+            conn.commit(); conn.close()
         return True
     except Exception as e:
         st.error(f"❌ เกิดข้อผิดพลาดในระบบฐานข้อมูล: {e}")
@@ -96,18 +108,21 @@ def toggle_favorite(user_id, part_id):
 
 def get_user_favorites(user_id):
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("CREATE TABLE IF NOT EXISTS favorites (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, part_id INTEGER, UNIQUE(user_id, part_id))")
-        cursor.execute("SELECT part_id FROM favorites WHERE user_id = ?", (user_id,))
-        rows = cursor.fetchall()
-        conn.close()
-        return [r["part_id"] for r in rows]
+        if USE_SUPABASE:
+            res = supabase.table("favorites").select("part_id").eq("user_id", user_id).execute()
+            return [r["part_id"] for r in res.data]
+        else:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("CREATE TABLE IF NOT EXISTS favorites (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, part_id INTEGER, UNIQUE(user_id, part_id))")
+            cursor.execute("SELECT part_id FROM favorites WHERE user_id = ?", (user_id,))
+            rows = cursor.fetchall(); conn.close()
+            return [r["part_id"] for r in rows]
     except:
         return []
 
 # ---------------------------
-# UI CUSTOMIZATION
+# UI CUSTOMIZATION (SIDEBAR)
 # ---------------------------
 with st.sidebar:
     st.title("FindSpares AI")
@@ -118,41 +133,36 @@ with st.sidebar:
             st.session_state.username = None
             st.session_state.user_id = None
             st.rerun()
+    
     st.title("Settings")
     theme_mode = st.toggle("🌙 Night Mode", value=True)
-    
-    # --- NEW: Developer Tools (For Debugging) ---
-    st.divider()
-    with st.expander("🛠️ Developer Tools (Debug DB)"):
-        st.write("ตรวจสอบข้อมูลในฐานข้อมูล (เฉพาะแอดมิน/คนพัฒนา)")
-        db_tables = ["users", "favorites", "shops", "shop_parts"]
-        selected_table = st.selectbox("เลือกตารางเพื่อดูข้อมูล", db_tables)
-        
-        if st.button("👁️ ดึงข้อมูลตาราง", use_container_width=True):
-            try:
-                conn = get_db_connection()
-                # Create table if missing during debug check
-                if selected_table == "users":
-                    conn.execute("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, email TEXT, password TEXT)")
-                elif selected_table == "favorites":
-                    conn.execute("CREATE TABLE IF NOT EXISTS favorites (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, part_id INTEGER, UNIQUE(user_id, part_id))")
-                
-                df = st.dataframe(conn.execute(f"SELECT * FROM {selected_table} LIMIT 100").fetchall())
-                conn.close()
-            except Exception as e:
-                st.error(f"⚠️ ไม่สามารถเรียกดูข้อมูลได้: {e}")
     
     st.divider()
     st.header("🎯 ตัวกรองการค้นหา")
     max_dist = st.slider("📏 ระยะทางสูงสุด (กม.)", 0, 100, 50)
     min_match = st.slider("🤖 ความแม่นยำ AI (%)", 0, 100, 40)
+    st.session_state.max_dist = max_dist
+    st.session_state.min_match = min_match / 100
+
+    st.divider()
+    with st.expander("🛠️ Developer Tools (Debug DB)"):
+        st.write("ตรวจสอบข้อมูลในฐานข้อมูล")
+        db_tables = ["users", "favorites", "shops", "shop_parts", "part_embeddings"]
+        selected_table = st.selectbox("เลือกตารางเพื่อดูข้อมูล", db_tables)
+        if st.button("👁️ ดึงข้อมูลตาราง", use_container_width=True):
+            try:
+                if USE_SUPABASE:
+                    res = supabase.table(selected_table).select("*").limit(100).execute()
+                    st.dataframe(res.data)
+                else:
+                    conn = get_db_connection()
+                    st.dataframe(conn.execute(f"SELECT * FROM {selected_table} LIMIT 100").fetchall())
+                    conn.close()
+            except Exception as e:
+                st.error(f"⚠️ ไม่สามารถเรียกดูข้อมูลได้: {e}")
     
     st.divider()
     st.markdown("FindSpares AI matches your requirements with local shop data using CLIP models.")
-    
-    # Store filters in session state for logic use
-    st.session_state.max_dist = max_dist
-    st.session_state.min_match = min_match / 100
 
 theme_css = f"""
 <style>
@@ -250,6 +260,16 @@ def render_auth():
                     elif add_user(u, e, p): st.success("✅ สำเร็จ! กรุณาเข้าสู่ระบบ")
                     else: st.error("❌ Username ถูกใช้ไปแล้ว")
 
+# ---------------------------
+# SESSION STATE INIT (INTERNAL)
+# ---------------------------
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+if "username" not in st.session_state:
+    st.session_state.username = None
+if "user_id" not in st.session_state:
+    st.session_state.user_id = None
+
 def render_main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
     @st.cache_resource
@@ -260,17 +280,42 @@ def render_main():
 
     @st.cache_resource
     def load_vectors_cached():
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT sp.id, sp.part_name, sp.image, s.shop_name, s.latitude, s.longitude, s.google_map_link, pe.embedding FROM part_embeddings pe JOIN shop_parts sp ON pe.part_id=sp.id JOIN shops s ON sp.shop_id=s.id")
-        data = cursor.fetchall(); conn.close()
-        if not data: return None, []
-        vectors, items = [], []
-        for d in data:
-            item_dict = dict(d)
-            vec = np.array(json.loads(item_dict["embedding"])).astype("float32")
-            vec = vec / np.linalg.norm(vec)
-            vectors.append(vec); items.append(item_dict)
+        if USE_SUPABASE:
+            # Join via query or multiple calls (Supabase doesn't do complex joins as easily as SQL)
+            # Best way: create a VIEW in Supabase or just fetch what we need.
+            # For now, let's fetch from part_embeddings and join shops/parts via ID
+            res = supabase.table("part_embeddings").select("*, shop_parts(*, shops(*))").execute()
+            data = res.data
+            if not data: return None, []
+            vectors, items = [], []
+            for d in data:
+                # Flatten the Supabase nested structure
+                try:
+                    sp = d["shop_parts"]
+                    s = sp["shops"]
+                    item_dict = {
+                        "id": sp["id"], "part_name": sp["part_name"], "image": sp["image"],
+                        "shop_name": s["shop_name"], "latitude": s["latitude"], 
+                        "longitude": s["longitude"], "google_map_link": s["google_map_link"]
+                    }
+                    vec = np.array(d["embedding"]).astype("float32")
+                    vec = vec / np.linalg.norm(vec)
+                    vectors.append(vec); items.append(item_dict)
+                except: continue
+        else:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("SELECT sp.id, sp.part_name, sp.image, s.shop_name, s.latitude, s.longitude, s.google_map_link, pe.embedding FROM part_embeddings pe JOIN shop_parts sp ON pe.part_id=sp.id JOIN shops s ON sp.shop_id=s.id")
+            rows = cursor.fetchall(); conn.close()
+            if not rows: return None, []
+            vectors, items = [], []
+            for d in rows:
+                item_dict = dict(d)
+                vec = np.array(json.loads(item_dict["embedding"])).astype("float32")
+                vec = vec / np.linalg.norm(vec)
+                vectors.append(vec); items.append(item_dict)
+        
+        if not vectors: return None, []
         vectors = np.array(vectors)
         idx = faiss.IndexFlatIP(vectors.shape[1]); idx.add(vectors)
         return idx, items

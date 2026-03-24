@@ -8,4 +8,5 @@ regex
 tqdm
 git+https://github.com/openai/CLIP.git
 faiss-cpu==1.7.4
+supabase==2.4.5
 streamlit
