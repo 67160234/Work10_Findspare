@@ -347,6 +347,9 @@ def render_main():
 
     if idx is None:
         st.warning("⚠️ ฐานข้อมูลว่างเปล่า กรุณาเพิ่มข้อมูลอะไหล่ใน Supabase/SQLite ก่อนใช้งานครับ")
+        if st.button("🔄 โหลดข้อมูลใหม่ (Refresh Cache)", use_container_width=True):
+            st.cache_resource.clear()
+            st.rerun()
     
     def encode_text(text):
         tokens = clip.tokenize([text]).to(device)
