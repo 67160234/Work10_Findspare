@@ -26,30 +26,30 @@ with st.sidebar:
     """)
 
 # Inject Custom CSS for Theme and Responsiveness
-theme_css = """
+theme_css = f"""
 <style>
-    /* Mobile Responsive Optimizations */
-    @media (max-width: 640px) {
-        .main .block-container {
-            padding: 1rem !important;
-        }
-        h1 {
-            font-size: 1.8rem !important;
-        }
-    }
+/* Mobile Responsive Optimizations */
+@media (max-width: 640px) {{
+    .main .block-container {{
+        padding: 1rem !important;
+    }}
+    h1 {{
+        font-size: 1.8rem !important;
+    }}
+}}
 
-    /* Card Styling */
-    .stCard {
-        border-radius: 10px;
-        padding: 15px;
-        margin-bottom: 20px;
-        border: 1px solid #ddd;
-        transition: transform 0.2s;
-    }
-    .stCard:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    }
+/* Card Styling */
+.stCard {{
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    transition: transform 0.2s;
+}}
+.stCard:hover {{
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}}
 </style>
 """
 
@@ -57,36 +57,36 @@ theme_css = """
 if theme_mode:
     # 🌙 Dark Mode Override
     theme_css += """
-    <style>
-        .stApp {
-            background-color: #0E1117;
-            color: #FAFAFA;
-        }
-        [data-testid="stHeader"] {
-            background-color: rgba(14, 17, 23, 0.8);
-        }
-        .stMarkdown, p, span, label {
-            color: #FAFAFA !important;
-        }
-        .stTextInput input, .stFileUploader section {
-            background-color: #262730 !important;
-            color: white !important;
-        }
-    </style>
-    """
+<style>
+.stApp {
+    background-color: #0E1117;
+    color: #FAFAFA;
+}
+[data-testid="stHeader"] {
+    background-color: rgba(14, 17, 23, 0.8);
+}
+.stMarkdown, p, span, label {
+    color: #FAFAFA !important;
+}
+.stTextInput input, .stFileUploader section {
+    background-color: #262730 !important;
+    color: white !important;
+}
+</style>
+"""
 else:
     # ☀️ Light Mode Override
     theme_css += """
-    <style>
-        .stApp {
-            background-color: #FFFFFF;
-            color: #31333F;
-        }
-        .stMarkdown, p, span, label {
-            color: #31333F !important;
-        }
-    </style>
-    """
+<style>
+.stApp {
+    background-color: #FFFFFF;
+    color: #31333F;
+}
+.stMarkdown, p, span, label {
+    color: #31333F !important;
+}
+</style>
+"""
 
 st.markdown(theme_css, unsafe_allow_html=True)
 
