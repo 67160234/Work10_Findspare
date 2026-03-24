@@ -1,0 +1,12 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+numpy<2.0.0
+Pillow
+torch==2.2.1
+torchvision==0.17.1
+ftfy
+regex
+tqdm
+git+https://github.com/openai/CLIP.git
+faiss-cpu
+pymysql
+streamlit

@@ -1,0 +1,3 @@
+libopenblas-dev
+libgomp1
+swig
