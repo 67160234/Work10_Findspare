@@ -194,8 +194,18 @@ else:
     theme_css += """
 <style>
 .stApp { background-color: #F8FAFC; }
-/* Only change font in main area, not sidebar */
-.main h1, .main h2, .main h3, .main p, .main span, .main label, .main div, .main .stMarkdown { color: #1E293B !important; }
+/* Force dark text for ALL main content elements (Tabs, Alerts, Labels) */
+[data-testid="stMain"] h1, [data-testid="stMain"] h2, [data-testid="stMain"] h3, 
+[data-testid="stMain"] p, [data-testid="stMain"] span, [data-testid="stMain"] label, 
+[data-testid="stMain"] div, [data-testid="stMain"] .stMarkdown, 
+[data-testid="stMain"] button[data-baseweb="tab"] p { 
+    color: #1E293B !important; 
+}
+/* Re-fix Button text (Yellow on Blue) since we used global div selector above */
+[data-testid="stMain"] div.stButton > button, 
+[data-testid="stMain"] div.stLinkButton > a { 
+    color: #FBBF24 !important; 
+}
 .stProgress > div > div > div > div { background-color: #1E3A8A !important; }
 </style>
 """
