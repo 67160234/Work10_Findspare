@@ -181,23 +181,23 @@ div.stLinkButton > a {{
 """
 if theme_mode:
     theme_css += """
-    <style>
-    .stApp { background-color: #0F172A; color: #F1F5F9; }
-    [data-testid="stHeader"] { background-color: rgba(15, 23, 42, 0.9); }
-    h1, h2, h3, p, span, label { color: #F1F5F9 !important; }
-    .stTextInput input, .stFileUploader section { background-color: #1E293B !important; color: white !important; border: 1px solid #1E3A8A !important; }
-    /* Progress Bar Yellow */
-    .stProgress > div > div > div > div { background-color: #FBBF24 !important; }
-    </style>
-    """
+<style>
+.stApp { background-color: #0F172A; color: #F1F5F9; }
+[data-testid="stHeader"] { background-color: rgba(15, 23, 42, 0.9); }
+h1, h2, h3, p, span, label { color: #F1F5F9 !important; }
+.stTextInput input, .stFileUploader section { background-color: #1E293B !important; color: white !important; border: 1px solid #1E3A8A !important; }
+/* Progress Bar Yellow */
+.stProgress > div > div > div > div { background-color: #FBBF24 !important; }
+</style>
+"""
 else:
     theme_css += """
-    <style>
-    .stApp { background-color: #F8FAFC; color: #1E293B; }
-    h1, h2, h3 { color: #1E3A8A !important; }
-    .stProgress > div > div > div > div { background-color: #1E3A8A !important; }
-    </style>
-    """
+<style>
+.stApp { background-color: #F8FAFC; color: #1E293B; }
+h1, h2, h3 { color: #1E3A8A !important; }
+.stProgress > div > div > div > div { background-color: #1E3A8A !important; }
+</style>
+"""
 st.markdown(theme_css, unsafe_allow_html=True)
 
 # ---------------------------
