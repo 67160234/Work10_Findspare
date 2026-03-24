@@ -64,23 +64,37 @@ def add_user(username, email, password):
 # FAVORITES LOGIC
 # ---------------------------
 def toggle_favorite(user_id, part_id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT id FROM favorites WHERE user_id = ? AND part_id = ?", (user_id, part_id))
-    if cursor.fetchone():
-        cursor.execute("DELETE FROM favorites WHERE user_id = ? AND part_id = ?", (user_id, part_id))
-    else:
-        cursor.execute("INSERT INTO favorites (user_id, part_id) VALUES (?, ?)", (user_id, part_id))
-    conn.commit()
-    conn.close()
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        # Ensure table exists (fail-safe)
+        cursor.execute("CREATE TABLE IF NOT EXISTS favorites (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, part_id INTEGER, UNIQUE(user_id, part_id))")
+        
+        cursor.execute("SELECT id FROM favorites WHERE user_id = ? AND part_id = ?", (user_id, part_id))
+        if cursor.fetchone():
+            cursor.execute("DELETE FROM favorites WHERE user_id = ? AND part_id = ?", (user_id, part_id))
+            st.toast("🗑️ ลบจากรายการโปรดแล้ว")
+        else:
+            cursor.execute("INSERT INTO favorites (user_id, part_id) VALUES (?, ?)", (user_id, part_id))
+            st.toast("⭐ บันทึกเป็นรายการโปรดแล้ว")
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        st.error(f"❌ เกิดข้อผิดพลาดในระบบฐานข้อมูล: {e}")
+        return False
 
 def get_user_favorites(user_id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT part_id FROM favorites WHERE user_id = ?", (user_id,))
-    rows = cursor.fetchall()
-    conn.close()
-    return [r["part_id"] for r in rows]
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("CREATE TABLE IF NOT EXISTS favorites (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, part_id INTEGER, UNIQUE(user_id, part_id))")
+        cursor.execute("SELECT part_id FROM favorites WHERE user_id = ?", (user_id,))
+        rows = cursor.fetchall()
+        conn.close()
+        return [r["part_id"] for r in rows]
+    except:
+        return []
 
 # ---------------------------
 # UI CUSTOMIZATION
