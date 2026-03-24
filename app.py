@@ -25,6 +25,33 @@ if "user_id" not in st.session_state:
     st.session_state.user_id = None
 if "page" not in st.session_state:
     st.session_state.page = 1
+if "show_camera" not in st.session_state:
+    st.session_state.show_camera = False
+
+# ---------------------------
+# SEARCH SYNONYMS (SMART SEARCH)
+# ---------------------------
+SYNONYM_MAP = {
+    "brake": ["เบรก", "เบรค", "ผ้าเบรก", "ผ้าเบรค", "brake pad", "brake shoe", "ก้ามเบรก", "ผ้า"],
+    "engine": ["เครื่องยนต์", "เครื่อง", "engine", "motor", "ฝาสูบ"],
+    "filter": ["กรอง", "ไส้กรอง", "filter", "oil filter", "air filter", "กรองอากาศ", "กรองเครื่อง"],
+    "spark": ["หัวเทียน", "spark plug", "จุดระเบิด"],
+    "battery": ["แบตเตอรี่", "แบต", "battery", "ไฟฟ้ารถ"],
+    "radiator": ["หม้อน้ำ", "radiator", "ระบายความร้อน", "พัดลมหม้อน้ำ"],
+    "shock": ["โช้ค", "โช๊ค", "suspension", "shock absorber", "ช่วงล่าง", "สปริง"],
+    "tire": ["ยาง", "ล้อ", "ยางรถยนต์", "tire", "tyre", "ยางนอก"],
+    "belt": ["สายพาน", "belt", "timing belt", "สายพานแอร์", "สายพานไดชาร์จ"],
+    "light": ["ไฟหน้า", "ไฟท้าย", "หลอดไฟ", "light", "lamp", "bulb", "ไฟเลี้ยว", "โคมไฟ"],
+    "oil": ["น้ำมัน", "น้ำมันเครื่อง", "oil", "lubricant", "น้ำมันเกียร์", "น้ำมันเบรก"],
+    "clutch": ["คลัตช์", "คลัช", "clutch", "หวีคลัช", "แผ่นคลัช"],
+    "wiper": ["ใบปัดน้ำฝน", "ปัดน้ำฝน", "wiper", "ยางปัดน้ำฝน"],
+    "bearing": ["ลูกปืน", "bearing", "ลูกปืนล้อ"],
+    "gasket": ["ปะเก็น", "gasket", "ปะเก็นฝาสูบ"],
+    "exhaust": ["ท่อไอเสีย", "ท่อ", "exhaust", "พักปลาย"],
+    "alternator": ["ไดชาร์จ", "alternator", "ได"],
+    "starter": ["ไดสตาร์ท", "starter", "มอเตอร์สตาร์ท"],
+    "steering": ["พวงมาลัย", "steering", "แร็คพวงมาลัย", "ลูกหมาก"]
+}
 
 # ---------------------------
 # DATABASE CONFIG (SUPABASE FALLBACK TO SQLITE)
@@ -367,10 +394,28 @@ def render_main():
         if idx is None: return []
         D, I = idx.search(q_vec, min(200, len(items)))
         results, seen = [], set()
+
+        # Expand Keywords for Smart Filtering
+        search_terms = []
+        if q_text:
+            q_low = q_text.lower()
+            search_terms.append(q_low)
+            for category, syns in SYNONYM_MAP.items():
+                if q_low == category or any(s in q_low for s in syns):
+                    search_terms.extend(syns)
+            search_terms = list(set(search_terms))
+
         for score, i in zip(D[0], I[0]):
             if i == -1: continue
             item = items[i]
             if item["id"] in seen: continue
+            
+            # Smart Filter
+            if search_terms:
+                name_low = item["part_name"].lower()
+                if not any(term in name_low for term in search_terms): 
+                    continue
+
             seen.add(item["id"])
             R = 6371
             dlat, dlon = math.radians(item["latitude"]-lat), math.radians(item["longitude"]-lng)
@@ -380,9 +425,6 @@ def render_main():
                 "id": item["id"], "part_name": item["part_name"], "image": item["image"], "shop_name": item["shop_name"],
                 "distance": dist, "score": float(max(0, min(1, score))), "map": item["google_map_link"]
             })
-        if q_text:
-            kw = q_text.lower()
-            results = [r for r in results if kw in r["part_name"].lower()]
         return results
 
     st.title("🔧 FindSpares AI Search")
