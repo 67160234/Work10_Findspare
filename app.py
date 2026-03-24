@@ -32,25 +32,16 @@ if "show_camera" not in st.session_state:
 # SEARCH SYNONYMS (SMART SEARCH)
 # ---------------------------
 SYNONYM_MAP = {
-    "brake": ["เบรก", "เบรค", "ผ้าเบรก", "ผ้าเบรค", "ก้ามเบรก", "จานเบรก", "เบรกมือ", "น้ำมันเบรก", "แม่ปั๊มเบรก", "brake", "brake pad", "brake shoe", "disc brake", "drum brake", "brake fluid"],
-    "engine": ["เครื่องยนต์", "เครื่อง", "มอเตอร์", "ฝาสูบ", "ลูกสูบ", "ข้อเหวี่ยง", "ปะเก็นเครื่อง", "เสื้อสูบ", "ก้านสูบ", "engine", "motor", "cylinder head", "piston", "crankshaft", "block"],
-    "filter": ["กรอง", "ไส้กรอง", "กรองเครื่อง", "กรองน้ำมันเครื่อง", "กรองอากาศ", "กรองแอร์", "กรองเบนซิน", "กรองโซล่า", "filter", "oil filter", "air filter", "cabin filter", "fuel filter"],
-    "spark": ["หัวเทียน", "คอยล์จุดระเบิด", "คอยล์หัวเทียน", "สายหัวเทียน", "จานจ่าย", "นมหนู", "spark plug", "ignition coil", "distributor", "plug wire"],
-    "battery": ["แบตเตอรี่", "แบต", "ไฟฟ้ารถ", "ไดชาร์จ", "ขั้วแบต", "น้ำกลั่น", "battery", "accumulator", "terminal", "cell"],
-    "radiator": ["หม้อน้ำ", "พัดลมหม้อน้ำ", "วาล์วน้ำ", "ปั๊มน้ำ", "ท่อน้ำ", "ถังพักน้ำ", "ฝาหม้อน้ำ", "ระบายความร้อน", "radiator", "cooling fan", "water pump", "thermostat", "hose"],
-    "shock": ["โช้ค", "โช๊ค", "โช้คอัพ", "สปริง", "บูช", "ลูกหมาก", "ช่วงล่าง", "ปีกนก", "เพลาขับ", "ลูกปืนล้อ", "shock", "shock absorber", "strut", "spring", "suspension", "ball joint", "arm"],
-    "tire": ["ยาง", "ล้อ", "ยางรถยนต์", "ล้อแม็ก", "ยางนอก", "ยางใน", "ดอกยาง", "เติมลม", "tire", "tyre", "wheel", "rim", "alloy wheel"],
-    "belt": ["สายพาน", "สายพานหน้าเครื่อง", "สายพานแอร์", "สายพานไดชาร์จ", "สายพานไทม์มิ่ง", "ลูกรอก", "สายพานราวลิ้น", "belt", "timing belt", "v-belt", "serpentine belt", "tensioner"],
-    "light": ["ไฟหน้า", "ไฟท้าย", "ไฟเลี้ยว", "ไฟหรี่", "ไฟตัดหมอก", "หลอดไฟ", "โคมไฟ", "ไฟเบรก", "light", "lamp", "bulb", "headlight", "taillight", "fog light", "led"],
-    "oil": ["น้ำมัน", "น้ำมันเครื่อง", "น้ำมันเกียร์", "น้ำมันเฟืองท้าย", "จาระบี", "หล่อลื่น", "น้ำมันเบรก", "น้ำมันพาวเวอร์", "oil", "lubricant", "grease", "transmission fluid"],
-    "clutch": ["คลัตช์", "คลัช", "แผ่นคลัตช์", "หวีคลัตช์", "ลูกปืนคลัตช์", "ปั๊มคลัตช์", "แม่ปั๊มคลัตช์", "clutch", "clutch plate", "clutch cover", "release bearing"],
-    "wiper": ["ใบปัดน้ำฝน", "ปัดน้ำฝน", "ยางปัดน้ำฝน", "ก้านปัดน้ำฝน", "มอเตอร์ปัดน้ำฝน", "ฉีดน้ำ", "wiper", "wiper blade", "windshield wiper"],
-    "bearing": ["ลูกปืน", "ลูกปืนล้อ", "ลูกปืนตับ", "ลูกปืนเกียร์", "ลูกปืนคลัตช์", "ตลับลูกปืน", "bearing", "ball bearing", "roller bearing"],
-    "gasket": ["ปะเก็น", "ปะเก็นฝาสูบ", "ปะเก็นอ่าง", "ปะเก็นฝาวาล์ว", "ปะเก็นชุดใหญ่", "gasket", "head gasket", "valve cover gasket"],
-    "exhaust": ["ท่อไอเสีย", "ท่อ", "พักปลาย", "พักกลาง", "Header", "แคท", "ท่อพัก", "ปลายท่อ", "exhaust", "muffler", "tailpipe", "catalyst", "header"],
-    "alternator": ["ไดชาร์จ", "ได", "ชาร์จไฟ", "คัทเอาท์", "แปลงถ่าน", "alternator", "generator"],
-    "starter": ["ไดสตาร์ท", "มอเตอร์สตาร์ท", "สตาร์ทไม่ติด", "โซลินอยด์", "starter", "starter motor", "solenoid"],
-    "steering": ["พวงมาลัย", "แร็คพวงมาลัย", "ลูกหมากพวงมาลัย", "ยอยพวงมาลัย", "น้ำมันพาวเวอร์", "พาวเวอร์", "steering", "power steering", "steering rack"]
+    "Brake Pad": ["เบรก", "เบรค", "ผ้าเบรก", "ผ้าเบรค", "ก้ามเบรก", "เบรกหน้า", "เบรกหลัง", "Brake Pad", "Brake Pads", "Brakepads"],
+    "Car Battery": ["แบตเตอรี่", "แบต", "แบตรถยนต์", "ไฟฟ้ารถ", "ขั้วแบต", "น้ำกลั่น", "Car Battery", "Battery", "Accu", "Car Batt"],
+    "Air Filter": ["กรองอากาศ", "กรองเครื่อง", "กรอง", "ไส้กรอง", "กรองฝุ่น", "กรองแอร์", "Air Filter", "Air Filters", "Filter", "Air Filter Element"],
+    "Ball Joint": ["ลูกหมาก", "ลูกหมากปีกนก", "ลูกหมากแร็ค", "ช่วงล่าง", "ลูกหมากล่าง", "ลูกหมากบน", "คันชัก", "Ball Joint", "Ball Joints", "Suspension Joint"],
+    "Brake Disc": ["จานเบรก", "จานเบรค", "จาน", "จานดิส", "เบรกจาน", "จานดิสก์", "Brake Disc", "Brake Discs", "Disc Brake", "Rotor"],
+    "Radiator": ["หม้อน้ำ", "ระบายความร้อน", "พัดลมหม้อน้ำ", "ฝาหม้อน้ำ", "ท่อน้ำ", "รังผึ้งหม้อน้ำ", "น้ำยาหล่อเย็น", "Radiator", "Radiators", "Cooling System"],
+    "Shock Absorber": ["โช้ค", "โช๊ค", "โช้คอัพ", "สปริง", "ช่วงล่าง", "Shock Absorber", "Shock Absorbers", "Shock", "Shocks", "Strut", "Struts"],
+    "Spark Plug": ["หัวเทียน", "คอยล์จุดระเบิด", "จุดระเบิด", "ไฟแปลบ", "หัวเทียนเข็ม", "หัวเทียนรถ", "Spark Plug", "Spark Plugs", "Plug", "Ignition Plug"],
+    "Starter Motor": ["ไดสตาร์ท", "มอเตอร์สตาร์ท", "สตาร์ทรถ", "ไดสตาร์ทรถ", "มอเตอร์สตาร์ทรถ", "Starter Motor", "Starter", "Starters", "Ignition Starter"],
+    "AC Compressor": ["คอมแอร์", "คอมเพรสเซอร์", "แอร์รถยนต์", "ทำความเย็น", "น้ำยาแอร์", "ท่อแอร์", "AC Compressor", "Compressor", "Air Con", "AC Unit"]
 }
 
 # ---------------------------
