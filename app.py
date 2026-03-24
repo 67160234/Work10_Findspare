@@ -152,18 +152,52 @@ theme_css = f"""
     h1 {{ font-size: 1.8rem !important; }}
 }}
 .stCard {{
-    border-radius: 10px; padding: 15px; margin-bottom: 20px;
-    border: 1px solid #ddd; transition: transform 0.2s;
+    border-radius: 12px; padding: 15px; margin-bottom: 20px;
+    border: 1px solid #1E3A8A; transition: transform 0.2s;
+    background-color: rgba(30, 58, 138, 0.05);
 }}
 .stCard:hover {{
-    transform: translateY(-5px); box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transform: translateY(-5px); box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
+}}
+/* Custom Button Style */
+div.stButton > button {{
+    background-color: #1E3A8A !important;
+    color: #FBBF24 !important;
+    border: 1px solid #FBBF24 !important;
+    border-radius: 8px !important;
+}}
+div.stButton > button:hover {{
+    background-color: #FBBF24 !important;
+    color: #1E3A8A !important;
+}}
+/* Link Button Style */
+div.stLinkButton > a {{
+    background-color: #FBBF24 !important;
+    color: #1E3A8A !important;
+    border-radius: 8px !important;
+    font-weight: bold !important;
 }}
 </style>
 """
 if theme_mode:
-    theme_css += "<style>.stApp { background-color: #0E1117; color: #FAFAFA; } .stMarkdown, p, span, label { color: #FAFAFA !important; } .stTextInput input, .stFileUploader section { background-color: #262730 !important; color: white !important; }</style>"
+    theme_css += """
+    <style>
+    .stApp { background-color: #0F172A; color: #F1F5F9; }
+    [data-testid="stHeader"] { background-color: rgba(15, 23, 42, 0.9); }
+    h1, h2, h3, p, span, label { color: #F1F5F9 !important; }
+    .stTextInput input, .stFileUploader section { background-color: #1E293B !important; color: white !important; border: 1px solid #1E3A8A !important; }
+    /* Progress Bar Yellow */
+    .stProgress > div > div > div > div { background-color: #FBBF24 !important; }
+    </style>
+    """
 else:
-    theme_css += "<style>.stApp { background-color: #FFFFFF; color: #31333F; } .stMarkdown, p, span, label { color: #31333F !important; }</style>"
+    theme_css += """
+    <style>
+    .stApp { background-color: #F8FAFC; color: #1E293B; }
+    h1, h2, h3 { color: #1E3A8A !important; }
+    .stProgress > div > div > div > div { background-color: #1E3A8A !important; }
+    </style>
+    """
 st.markdown(theme_css, unsafe_allow_html=True)
 
 # ---------------------------
