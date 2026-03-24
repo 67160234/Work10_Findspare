@@ -263,13 +263,17 @@ user_lng = 100.9289055
 
 st.info("📍 ระบบรันแบบ Standalone (ดาวน์โหลดข้อมูลมาไว้ในไฟล์ database.db)")
 
-col1, col2 = st.columns(2)
+# tabs for searching
+tab_text, tab_upload, tab_camera = st.tabs(["🔍 ค้นหาด้วยชื่อ", "📁 อัปโหลดไฟล์", "📸 ถ่ายรูป"])
 
-with col1:
-    query = st.text_input("ค้นหาอะไหล่ (ระบุคำค้นหา)")
+with tab_text:
+    query = st.text_input("ระบุคำค้นหา (เช่น ผ้าเบรก, หัวเทียน)")
 
-with col2:
-    upload = st.file_uploader("หรืออัปโหลดรูปภาพเพื่อค้นหา")
+with tab_upload:
+    upload = st.file_uploader("เลือกไฟล์รูปภาพเพื่อค้นหา", type=["jpg", "png", "jpeg"])
+
+with tab_camera:
+    camera_img = st.camera_input("ถ่ายรููปอุปกรณ์เพื่อค้นหา")
 
 if "results" not in st.session_state:
     st.session_state.results = None
@@ -279,16 +283,23 @@ if "page" not in st.session_state:
 
 per_page = 9
 
-if st.button("🚀 ค้นหาด้วย AI"):
+# Unified search button
+if st.button("🚀 เริ่มการค้นหาด้วย AI", use_container_width=True):
     st.session_state.page = 1
     with st.spinner("🔎 กำลังประมวลผลการค้นหา..."):
-        if upload:
-            img = Image.open(upload)
+        # Image Search takes priority (Camera > Upload)
+        target_img = camera_img if camera_img else upload
+        
+        if target_img:
+            img = Image.open(target_img)
             query_vec = encode_image(img)
             query_text = None
-        else:
+        elif query:
             query_text = translate_keyword(query)
             query_vec = encode_text(query_text)
+        else:
+            st.warning("⚠️ กรุณาใส่ชื่ออะไหล่ หรือ อัปโหลด/ถ่ายรูป")
+            st.stop()
 
         results = search(query_vec, user_lat, user_lng, query_text)
         results = sorted(results, key=lambda x: (-x["score"], x["distance"]))
