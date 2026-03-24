@@ -193,8 +193,9 @@ h1, h2, h3, p, span, label { color: #F1F5F9 !important; }
 else:
     theme_css += """
 <style>
-.stApp { background-color: #F8FAFC; color: #1E293B !important; }
-h1, h2, h3, p, span, label, div, .stMarkdown { color: #1E293B !important; }
+.stApp { background-color: #F8FAFC; }
+/* Only change font in main area, not sidebar */
+.main h1, .main h2, .main h3, .main p, .main span, .main label, .main div, .main .stMarkdown { color: #1E293B !important; }
 .stProgress > div > div > div > div { background-color: #1E3A8A !important; }
 </style>
 """
