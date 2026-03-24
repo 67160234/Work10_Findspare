@@ -237,6 +237,24 @@ else:
 [data-testid="stMain"] div.stLinkButton > a { 
     color: #FBBF24 !important; 
 }
+/* Full-screen Dialog for Mobile (Google Lens style) */
+@media (max-width: 640px) {
+    div[data-testid="stDialog"] div[role="dialog"] {
+        width: 100vw !important;
+        height: 100vh !important;
+        min-width: 100vw !important;
+        min-height: 100vh !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        border-radius: 0 !important;
+    }
+    div[data-testid="stDialog"] [data-testid="stVerticalBlock"] {
+        padding: 0 !important;
+    }
+}
 .stProgress > div > div > div > div { background-color: #1E3A8A !important; }
 </style>
 """
@@ -365,12 +383,11 @@ def render_main():
     # NEW: My Favorites Tab
     tab_search, tab_fav = st.tabs(["🔍 ค้นหาอะไหล่", "⭐ รายการโปรด"])
     
-    @st.dialog("📸 สไลด์เพื่อค้นหาด้วยรูปภาพ", width="large")
+    @st.dialog("📸 FindSpares Scanner", width="large")
     def camera_modal():
-        st.write("วางอะไหล่ให้ตรงกลางกล้องแล้วกดถ่ายรูปเพื่อค้นหา")
         c_img = st.camera_input("แสกนอะไหล่", label_visibility="collapsed")
         if c_img:
-            with st.spinner("🔎 กำลังประมวลผล..."):
+            with st.spinner("🔎 Searching..."):
                 img = Image.open(c_img).convert("RGB")
                 vec = encode_image(img)
                 res = search_parts(vec, 13.2839, 100.9289)
